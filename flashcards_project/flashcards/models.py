@@ -14,20 +14,21 @@ class BaseModel(models.Model):
 
     class Meta:
             abstract = True
-
-class Flashcard(BaseModel):
-    term = models.CharField(max_length=255)
-    definition = models.TextField()
-
-    def __str__(self):
-        return self.term
-    
+   
 
 class Deck(BaseModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='decks')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+    
+class Flashcard(BaseModel):
+    deck = models.ForeignKey(Deck, on_delete=models.CASCADE, related_name='flashcards')  # Many-to-one relationship
+    term = models.CharField(max_length=255)
+    definition = models.TextField()
 
     def __str__(self):
         return self.term
