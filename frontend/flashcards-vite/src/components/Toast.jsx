@@ -36,7 +36,7 @@ export const ToastProvider = ({ children }) => {
 				>
 					<Toast.Title className="font-bold">Notification: {toastMessage.title} </Toast.Title>
 					<Toast.Description className="text.sm">
-						A radix toast Notification.<br>
+						A radix toast Notification.<br></br>
 						{toastMessage.description}
 					</Toast.Description>
 					{/* <Toast.Action />

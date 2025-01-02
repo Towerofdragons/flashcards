@@ -7,7 +7,10 @@ const EditDeck = () => {
   const { id } = useParams();
   const [deckName, setDeckName] = useState("JavaScript Basics");
   const [cards, setCards] = useState([
-    { id: 1, front: "", back: "" }
+    { id: 1, front: "Example", back: "Example loaded from backend!" },
+    { id: 2, front: "", back: "" },
+    { id: 3, front: "", back: "" },
+    { id: 4, front: "", back: "" }
   ]);
 
   const addCard = () => {
@@ -23,6 +26,10 @@ const EditDeck = () => {
       card.id === id ? { ...card, [field]: value } : card
     ));
   };
+
+  const deleteCard = (id) => {
+    setCards(cards.filter((card) => card.id !== id));
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -67,6 +74,13 @@ const EditDeck = () => {
                       placeholder="Enter the back of the card"
                     />
                   </div>
+                  <button type="button" 
+                  onClick={() => deleteCard(card.id)}
+                  className="delete-card-btn"
+                  >
+
+                  Delete Card
+                </button>
                 </div>
               ))}
             </div>

@@ -49,7 +49,7 @@
 
 import { Link } from 'react-router-dom';
 
-const DeckCard = ({ id = 1, title, cardCount, lastStudied }) => {
+const DeckCard = ({ id, title, cardCount, lastStudied }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-card hover:shadow-lg transition-shadow card-hover">
       <h3 className="text-xl font-semibold text-text mb-2">{title}</h3>

@@ -21,10 +21,10 @@ const Sidebar = () => {
           <span>My Decks</span>
         </a>
 
-        <a href="#" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
+        {/* <a href="#" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
         <PlusIcon size={20} />
         <span>Create Deck</span>
-        </a> 
+        </a>  */}
         
         <CreateDeckDialog/>
 

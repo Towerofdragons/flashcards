@@ -4,7 +4,9 @@ import Sidebar from '../components/Sidebar';
 
 const StudyDeck = () => {
   const { id } = useParams();
-  // Mock data - in a real app this would come from your backend
+
+  
+  // Mock data - in a real app this would come from your backend - Load card data
   const [cards] = useState([
     { id: 1, front: "What is React?", back: "A JavaScript library for building user interfaces" },
     { id: 2, front: "What is JSX?", back: "A syntax extension for JavaScript that allows you to write HTML-like code in JavaScript" },
