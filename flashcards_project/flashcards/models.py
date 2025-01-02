@@ -19,7 +19,7 @@ class BaseModel(models.Model):
 class Deck(BaseModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='decks')
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, null=True,related_name='decks')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
