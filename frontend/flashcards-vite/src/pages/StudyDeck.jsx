@@ -1,40 +1,85 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { useToast } from "../components/Toast";
+
 import Sidebar from '../components/Sidebar';
+
+import api from "../api/axios"
 
 const StudyDeck = () => {
   const { id } = useParams();
 
+  const [deckName, setDeckName] = useState("");
+  const [flashcards, setCards] = useState([]);
+  const [size, setSize] = useState(0);
+  const [error, setError] = useState(null);
+  const { showToast } = useToast();
   
-  // Mock data - in a real app this would come from your backend - Load card data
-  const [cards] = useState([
-    { id: 1, front: "What is React?", back: "A JavaScript library for building user interfaces" },
-    { id: 2, front: "What is JSX?", back: "A syntax extension for JavaScript that allows you to write HTML-like code in JavaScript" },
-    { id: 3, front: "What is a Component?", back: "A reusable piece of UI that can contain its own content, logic, and styling" }
-  ]);
+  
+  // const [cards] = useState([
+  //   { id: 1, front: "What is React?", back: "A JavaScript library for building user interfaces" },
+  //   { id: 2, front: "What is JSX?", back: "A syntax extension for JavaScript that allows you to write HTML-like code in JavaScript" },
+  //   { id: 3, front: "What is a Component?", back: "A reusable piece of UI that can contain its own content, logic, and styling" }
+  // ]);
   
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+
+
+  useEffect(() => {
+    const getDeck = async () => {
+
+      try {
+        const response = await api.get(`/get-deck/${id}`);
+        api.post(`/study-deck/${id}/`);
+        // const {deck} = response.data;
+        // const {flashcards} = response.data;
+        //const {size} = response.data;
+        console.log(response.data);
+
+        setDeckName(response.data.deck.name) // TODO Deck name
+        setCards(response.data.flashcards);
+        setSize(response.data.size);
+
+      } catch (error) {
+        showToast(
+          {
+            title: `Error getting deck :${deck}`,
+            description: `${error}`
+          }
+        );
+        console.log(error);
+        throw error.response ? error.response.data : new Error("Network Error");
+      }
+    };
+
+    getDeck(); // Calls get deck to get all decks when component loads - runs once
+  },[]); 
+  
+  //flashcards[currentCardIndex]?.term - conditional chaining - handles undefined gracefully
   const handleCardClick = () => {
     setIsFlipped(!isFlipped);
   };
   const handleCorrect = () => {
     setCorrectCount(prev => prev + 1);
-    setCurrentCardIndex(prev => (prev + 1) % cards.length);
+    setCurrentCardIndex(prev => (prev + 1) % flashcards.length);
     setIsFlipped(false);
   };
   const handleNext = () => {
-    setCurrentCardIndex(prev => (prev + 1) % cards.length);
+    setCurrentCardIndex(prev => (prev + 1) % flashcards.length);
     setIsFlipped(false);
   };
-  const progressPercentage = (correctCount / cards.length) * 100;
+  const progressPercentage = (correctCount / flashcards.length) * 100;
   return (
     <div className="min-h-screen flex">
       <Sidebar />
       <main className="ml-64 flex-1 p-8">
         <div className="max-w-3xl mx-auto">
           <div className="mb-8">
+            <div>
+              <h2 className="text-2xl font-bold text-primary mb-8">{deckName}</h2>
+            </div>
             <div className="w-full bg-gray-200 rounded-full h-4">
               <div 
                 className="bg-primary h-4 rounded-full transition-all duration-300"
@@ -42,22 +87,41 @@ const StudyDeck = () => {
               />
             </div>
             <div className="text-right mt-2 text-gray-600">
-              Score: {correctCount}/{cards.length}
+              Score: {correctCount}/{flashcards.length}
             </div>
           </div>
-          <div 
+          { flashcards.length > 0?(
+
+            <div 
+              className={`card-container ${isFlipped ? 'flipped' : ''}`}
+              onClick={handleCardClick}
+            >
+              <div className="card-inner">
+                <div className="card-front">
+                  <p>{flashcards[currentCardIndex]?.term}</p> 
+                </div>
+                <div className="card-back">
+                  <p>{flashcards[currentCardIndex]?.definition}</p>
+                </div>
+              </div>
+            </div>
+            ) : (
+
+            <div 
             className={`card-container ${isFlipped ? 'flipped' : ''}`}
             onClick={handleCardClick}
-          >
-            <div className="card-inner">
-              <div className="card-front">
-                <p>{cards[currentCardIndex].front}</p>
+            >
+              <div className="card-inner">
+                <div className="card-front">
+                  <p>No cards in this deck. (Tap me)</p> 
               </div>
-              <div className="card-back">
-                <p>{cards[currentCardIndex].back}</p>
+                <div className="card-back">
+                  <p>Add a Few!</p>
+                </div>
               </div>
             </div>
-          </div>
+
+            )}
           <div className="flex justify-center gap-4 mt-8">
             <button
               onClick={handleCorrect}

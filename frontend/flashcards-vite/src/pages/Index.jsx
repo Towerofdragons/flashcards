@@ -1,13 +1,44 @@
 import Sidebar from '../components/Sidebar';
 import DeckCard from '../components/DeckCard';
+import api from '../api/axios'
+import { useToast } from "../components/Toast";
+import { useEffect, useState } from "react";
+
+
 
 const Index = () => {
-  const decks = [
-    { id: 1, title: "JavaScript Basics", cardCount: 25, lastStudied: "2 days ago" },
-    { id: 2, title: "React Fundamentals", cardCount: 30, lastStudied: "1 week ago" },
-    { id: 3, title: "CSS Properties", cardCount: 20, lastStudied: "3 days ago" },
-    { id: 4, title: "HTML Elements", cardCount: 15, lastStudied: "1 day ago" },
-  ];
+
+  const [decks, setDecks] = useState([]);
+  const [error, setError] = useState(null);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    const getDecks = async () => {
+      try {
+        const response = await api.get("/get-decks/");
+        console.log(response.data);
+        setDecks(response.data);
+      } catch (error) {
+        showToast(
+          {
+            title: "Error getting decks",
+            description: `${error}`
+          }
+        );
+        console.log(error);
+        throw error.response ? error.response.data : new Error("Network Error");
+      }
+    };
+
+    getDecks(); // Calls get deck to get all decks when component loads - runs once
+  },[]); 
+  // const decks = [
+  //   { id: 1, title: "JavaScript Basics", cardCount: 25, lastStudied: "2 days ago" },
+  //   { id: 2, title: "React Fundamentals", cardCount: 30, lastStudied: "1 week ago" },
+  //   { id: 3, title: "CSS Properties", cardCount: 20, lastStudied: "3 days ago" },
+  //   { id: 4, title: "HTML Elements", cardCount: 15, lastStudied: "1 day ago" },
+  // ];
+
 
   return (
     <div className="min-h-screen flex">
@@ -22,9 +53,10 @@ const Index = () => {
             <DeckCard
               id={deck.id}
               key={deck.id}
-              title={deck.title}
+              title={deck.name}
+              description={deck.description}
               cardCount={deck.cardCount}
-              lastStudied={deck.lastStudied}
+              lastStudied={deck.last_studied}
             />
           ))}
         </div>

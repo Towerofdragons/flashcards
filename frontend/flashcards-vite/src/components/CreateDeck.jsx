@@ -2,8 +2,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { PlusIcon, StethoscopeIcon } from 'lucide-react';
 // import * as Toast from "@radix-ui/react-toast";
 import { useState } from 'react';
-
 import { useToast } from "./Toast";
+import api from "../api/axios";
 // import { toast } from "react-toastify";
 //import "react-toastify/dist/ReactToastify.css";
 
@@ -26,10 +26,10 @@ export const CreateDeckDialog = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const { showToast } = useToast();
-  
-  const handleCreateDeck = () => {
-    
-    if (!title.trim()) {
+
+  const handleCreateDeck = async () => {
+    const name = title.trim()
+    if (!name) {
         console.log(" Empty field ");
         
         showToast({
@@ -38,16 +38,36 @@ export const CreateDeckDialog = () => {
         });
         return;
     }
+
+    try{
+      const response = await api.post("/add-deck/",
+        {
+          name: name,
+          description: description
+        }
+      );
+
+      showToast({
+        title: "Success",
+        description: "Deck created successfully!",
+      });
+
+      console.log("Deck created:", response.data);
+
+      // Reset the form
+      setTitle("");
+      setDescription("");
+    } catch (error){
+      
+      showToast({
+        title: "Error",
+        description:  "Failed to create deck",
+      });
+      console.error("Error creating deck:", error);
+    }
     
     console.log(title);
     
-    showToast({
-      title: "Success",
-      description: "Deck created successfully!",
-    });
-
-    // setTitle("");
-    // setDescription("");
   };
 
   return (

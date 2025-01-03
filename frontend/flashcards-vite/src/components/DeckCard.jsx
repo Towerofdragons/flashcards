@@ -49,13 +49,18 @@
 
 import { Link } from 'react-router-dom';
 
-const DeckCard = ({ id, title, cardCount, lastStudied }) => {
+const DeckCard = ({ id, title, description= "No description", cardCount, lastStudied }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-card hover:shadow-lg transition-shadow card-hover">
       <h3 className="text-xl font-semibold text-text mb-2">{title}</h3>
+      <p className="text-xl font-semibold text-text mb-2">{description}</p>
       <div className="text-gray-600 mb-4">
         <p>{cardCount} cards</p>
-        <p>Last studied: {lastStudied}</p>
+        <p>Last studied: {""}
+        {lastStudied
+          ? new Date(lastStudied).toLocaleString()
+      : "Not studied yet"}
+        </p>
       </div>
       <div className="flex gap-2">
         <Link 
