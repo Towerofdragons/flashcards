@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils.timezone import now
 
 from .models import Flashcard, Deck
 # users.models
@@ -21,7 +22,50 @@ from rest_framework.permissions import AllowAny
 # Add to Deck
 # Remove from Deck
 
-class get_decks(APIView):
+class deck():
+    def load_deck(self, id):
+        """
+        Retrieve specific deck
+        """
+        deck = Deck.objects.get(id=id, is_deleted=False)
+        print("Deck found")
+        print(deck)
+        return deck
+
+    def list_decks(self):
+        """
+        List all Undeleted Decks
+        """
+        decks =  Deck.objects.filter(is_deleted=False)
+        return decks
+
+    def edit_deck(self, id, name, description):
+        """
+        Make change to specific undeleted deck. 
+        """
+        deck_item = Deck.objects.get(id=id, is_deleted=False)
+
+        deck_item.name = name
+        deck_item.description = description
+
+        deck_item.save()
+
+    def delete_deck(self, id):
+        deck_item = Deck.objects.get(id=id, is_deleted=False)
+        deck_item.Delete()
+        deck_item.save()
+
+
+    def list_flashcards(self, id):
+        cards = Flashcard.objects.filter(deck=id)
+        print(cards)
+        return cards
+
+    def count_flashcards(self):
+        return self.list_flashcards.count()
+
+
+class get_decks(APIView, deck):
     """
     Get all decks
     """
@@ -31,7 +75,7 @@ class get_decks(APIView):
         self.Serializer = DeckSerializer
     def get(self, request):
 
-        decks =  Deck.objects.all()
+        decks =  self.list_decks()
 
         if decks == None:
              return Response(
@@ -39,6 +83,7 @@ class get_decks(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         serializer = self.Serializer(decks, many=True)
+
         return Response(serializer.data,
                         status=status.HTTP_200_OK
                         )
@@ -93,17 +138,24 @@ class edit_deck(APIView):
         description = serializer.data["description"]
         id = serializer.data["id"]
 
-        deck = Deck.objects.get(id=id, is_deleted=False)
+        # deck = Deck.objects.get(id=id, is_deleted=False)
 
-        deck.name = term
-        deck.description = description
+        # deck.name = term
+        # deck.description = description
 
-        deck.save()
+        # deck.save()
+        try:
+            deck = self.edit_Deck(id, term, description)
+        except Deck.DoesNotExist:
+            return Response(
+                {"error": "Card not found or has been deleted."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         return Response(deck.name, status=status.HTTP_200_OK)
         
 
-class delete_deck(APIView):
+class delete_deck(APIView, deck):
     """
     Delete Deck
     """
@@ -124,20 +176,21 @@ class delete_deck(APIView):
         id = serializer.data["id"]
         try:
             # Check that the deck exists
-            deck = Deck.objects.get(id=id, is_deleted=False)
+            #deck = Deck.objects.get(id=id, is_deleted=False)
+            self.delete_deck()
         except Deck.DoesNotExist:
             return Response(
                 {"error": "Card not found or has been deleted."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        deck.delete()
-        deck.save()
+        # deck.delete()
+        # deck.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class get_deck(APIView):
+class get_deck(APIView, deck):
     """
     Get specific deck and its contents
     """
@@ -149,8 +202,8 @@ class get_deck(APIView):
     def get(self, request, id):
         try:
             # Check that the deck exists
-            deck = Deck.objects.get(id=id, is_deleted=False)
-            print("Deck found")
+            deck_item = self.load_deck(id)
+            print(f"Deck found {deck_item}")
         except Deck.DoesNotExist:
             return Response(
                 {"error": "Deck not found or has been deleted."},
@@ -158,9 +211,11 @@ class get_deck(APIView):
             )
 
         try:     
-            cards = Flashcard.objects.filter(deck=id)
-            print(cards)
-            Deckserializer = self.DeckSerializer(deck, many=False)
+            # cards = Flashcard.objects.filter(deck=id)
+            # print(cards)
+
+            cards = self.list_flashcards(id)
+            Deckserializer = self.DeckSerializer(deck_item, many=False)
             FlashcardSerializer = self.FlashcardSerializer(cards, many=True)
             print("serialized")
             combined_data = {
@@ -177,6 +232,22 @@ class get_deck(APIView):
                 {"error": "An error occured"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class study_deck(APIView):
+    def post(self, request, id):
+        try:
+            deck = Deck.objects.get(id=id)
+            deck.last_studied = now()  # Update last_studied timestamp
+            print("Study updated")
+            deck.save()
+            serializer = DeckSerializer(deck)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Deck.DoesNotExist:
+            return Response({"error": "Deck not found"}, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
 class get_flashcard(APIView):
     """
