@@ -33,9 +33,6 @@ const StudyDeck = () => {
       try {
         const response = await api.get(`/get-deck/${id}`);
         api.post(`/study-deck/${id}/`);
-        // const {deck} = response.data;
-        // const {flashcards} = response.data;
-        //const {size} = response.data;
         console.log(response.data);
 
         setDeckName(response.data.deck.name) // TODO Deck name
@@ -63,11 +60,11 @@ const StudyDeck = () => {
   };
   const handleCorrect = () => {
     setCorrectCount(prev => prev + 1);
-    setCurrentCardIndex(prev => (prev + 1) % flashcards.length);
+    setCurrentCardIndex(prev => (prev + 1) % size);
     setIsFlipped(false);
   };
   const handleNext = () => {
-    setCurrentCardIndex(prev => (prev + 1) % flashcards.length);
+    setCurrentCardIndex(prev => (prev + 1) % size);
     setIsFlipped(false);
   };
   const progressPercentage = (correctCount / flashcards.length) * 100;
@@ -80,17 +77,17 @@ const StudyDeck = () => {
             <div>
               <h2 className="text-2xl font-bold text-primary mb-8">{deckName}</h2>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
+            <div className="w-full bg-gray-700 rounded-full h-4">
               <div 
                 className="bg-primary h-4 rounded-full transition-all duration-300"
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
             <div className="text-right mt-2 text-gray-600">
-              Score: {correctCount}/{flashcards.length}
+              Score: {correctCount}/{size}
             </div>
           </div>
-          { flashcards.length > 0?(
+          { size > 0 ?(
 
             <div 
               className={`card-container ${isFlipped ? 'flipped' : ''}`}

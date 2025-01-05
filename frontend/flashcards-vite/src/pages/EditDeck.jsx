@@ -1,23 +1,72 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
+import { useToast } from "../components/Toast";
 import '../styles/Edit.css';
+import api from "../api/axios";
+
+import {Trash2} from 'lucide-react'
+
 
 const EditDeck = () => {
+  const { showToast } = useToast();
   const { id } = useParams();
-  const [deckName, setDeckName] = useState("JavaScript Basics");
-  const [cards, setCards] = useState([
-    { id: 1, front: "Example", back: "Example loaded from backend!" },
-    { id: 2, front: "", back: "" },
-    { id: 3, front: "", back: "" },
-    { id: 4, front: "", back: "" }
-  ]);
+  const [deckName, setDeckName] = useState("");
+  const [cards, setCards] = useState([]);
+  const [size, setSize] = useState(0);
+  const [loading, setLoading] = useState(true);
+ 
 
-  const addCard = () => {
+  useEffect(() => {
+    const getDeck = async () => {
+
+      try {
+        const response = await api.get(`/get-deck/${id}`);
+        console.log(response.data);
+
+        setDeckName(response.data.deck.name) // TODO Deck name
+        setCards(response.data.flashcards);
+        setSize(response.data.size);
+        setLoading(false);
+
+      } catch (error) {
+        showToast(
+          {
+            title: `Error getting deck :${id}`,
+            description: `${error}`
+          }
+        );
+        setLoading(false);
+        console.log(error);
+        throw error.response ? error.response.data : new Error("Network Error");
+      }
+    };
+
+    getDeck(); // Calls get deck to get all decks when component loads - runs once
+    console.log(`Cards ${cards.length <= 0}`);
+  },[]); 
+
+
+  const addCard = async () => {
+
+    try{
+      const response = await api.post(`/add-flashcard/${id}/`);
+    }catch(error){
+      showToast(
+        {
+          title: `Error getting deck :${id}`,
+          description: `${error}`
+        }
+      );
+
+      throw error.response ? error.response.data : new Error("Network Error");
+    }
+
+    setSize(size + 1);
     setCards([...cards, { 
-      id: cards.length + 1, 
-      front: "", 
-      back: "" 
+      id: response.id, 
+      front: response.data.term, 
+      back: response.data.description 
     }]);
   };
 
@@ -35,9 +84,9 @@ const EditDeck = () => {
     e.preventDefault();
     console.log({ deckName, cards });
   };
-  
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-gray-300">
       <Sidebar />
       <main className="ml-64 flex-1 p-8">
         <div className="edit-container">
@@ -56,33 +105,38 @@ const EditDeck = () => {
             </div>
             <div className="cards-container">
               <h3 className="text-xl font-semibold mb-4">Cards</h3>
-              {cards.map((card) => (
-                <div key={card.id} className="card-edit-container">
-                  <div className="card-side">
-                    <label>Front</label>
-                    <textarea
-                      value={card.front}
-                      onChange={(e) => updateCard(card.id, 'front', e.target.value)}
-                      placeholder="Enter the front of the card"
-                    />
+              {
+                size <= 0 ? (
+                <p>No cards here</p>
+                ) : (
+                  cards.map((card) => (
+                  <div key={card.id} className="card-edit-container">
+                    <div className="card-side">
+                      <label>Front</label>
+                      <textarea
+                        value={card.front}
+                        onChange={(e) => updateCard(card.id, 'front', e.target.value)}
+                        placeholder="Enter the front of the card"
+                      />
+                    </div>
+                    <div className="card-side">
+                      <label>Back</label>
+                      <textarea
+                        value={card.back}
+                        onChange={(e) => updateCard(card.id, 'back', e.target.value)}
+                        placeholder="Enter the back of the card"
+                      />
+                    </div>
+                    <button type="button" 
+                    onClick={() => deleteCard(card.id)}
+                    className="delete-card-btn"
+                    >
+                      <Trash2 />
+                  </button>
                   </div>
-                  <div className="card-side">
-                    <label>Back</label>
-                    <textarea
-                      value={card.back}
-                      onChange={(e) => updateCard(card.id, 'back', e.target.value)}
-                      placeholder="Enter the back of the card"
-                    />
-                  </div>
-                  <button type="button" 
-                  onClick={() => deleteCard(card.id)}
-                  className="delete-card-btn"
-                  >
+                ))) 
+            }
 
-                  Delete Card
-                </button>
-                </div>
-              ))}
             </div>
             <button
               type="button"

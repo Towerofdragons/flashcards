@@ -1,11 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/Dialog";
-import { PlusIcon, StethoscopeIcon } from 'lucide-react';
+import { PlusIcon, ChartBarIcon } from 'lucide-react';
 // import * as Toast from "@radix-ui/react-toast";
 import { useState } from 'react';
 import { useToast } from "./Toast";
 import api from "../api/axios";
-// import { toast } from "react-toastify";
-//import "react-toastify/dist/ReactToastify.css";
 
 
 const sidebarStyles = {
@@ -112,6 +110,122 @@ export const CreateDeckDialog = () => {
             className={sidebarStyles.button}
           >
             Create Deck
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+
+export const GenerateDeckDialog = () => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const { showToast } = useToast();
+
+  const handleCreateDeck = async () => {
+    const name = title.trim()
+    if (!name) {
+        console.log(" Empty field ");
+        
+        showToast({
+            title: "Error",
+            description: "Please enter a deck title",
+        });
+        return;
+    }
+
+    try{
+      const response = await api.post("/generate-deck/",
+        { 
+          name: title,
+          prompt: prompt,
+          description: description
+        }
+      );
+
+      showToast({
+        title: "Success",
+        description: "Deck Generated successfully!",
+      });
+
+      console.log("Deck created:", response.data);
+
+      // Reset the form
+      setTitle("");
+      setDescription("");
+      setPrompt("");
+    } catch (error){
+      
+      showToast({
+        title: "Error - cannot Generate deck",
+        description:  "Failed to create deck",
+      });
+      console.error("Error creating deck:", error);
+    }
+    
+    console.log(title);
+    
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger className={sidebarStyles.dialogTrigger}>
+        <ChartBarIcon size={20} />
+        <span>Generate Deck</span>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Generate A New Deck</DialogTitle>
+        </DialogHeader>
+        <div className={sidebarStyles.formContainer}>
+          <div>
+            <label htmlFor="title" className={sidebarStyles.label}>
+              Title
+            </label>
+            <input
+              id="title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={sidebarStyles.input}
+              placeholder="Enter deck title"
+            />
+          </div>
+          <div>
+            <label htmlFor="description" className={sidebarStyles.label}>
+              Description
+            </label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className={sidebarStyles.input}
+              placeholder="Enter deck description"
+              rows={1}
+            />
+          </div>
+          <div>
+            <label htmlFor="prompt" className={sidebarStyles.label}>
+              Prompt
+            </label>
+            <textarea
+              required
+              id="description"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className={sidebarStyles.input}
+              placeholder="Enter deck prompt: Anyrhing in specific you want in your deck?"
+              rows={3}
+            />
+          </div>
+
+          <button
+            onClick={handleCreateDeck}
+            className={sidebarStyles.button}
+          >
+            Generate Deck
           </button>
         </div>
       </DialogContent>

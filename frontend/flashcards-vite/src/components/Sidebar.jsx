@@ -1,16 +1,15 @@
 import { HomeIcon, BookOpenIcon, PlusIcon, ChartBarIcon, CogIcon } from 'lucide-react';
 import '../index.css'
 
-import { CreateDeckDialog } from './CreateDeck';
-//import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CreateDeckDialog, GenerateDeckDialog } from './CreateDeck';
+
 import { useState } from 'react';
-//import { useToast } from "@/components/ui/use-toast";
 
 
 const Sidebar = () => {
   return (
-    <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg p-6">
-      <h1 className="text-2xl font-bold text-primary mb-8">Flashcards</h1>
+    <div className="fixed left-0 top-0 h-full w-64 bg-gray-200 shadow-lg p-6">
+      <h1 className="text-2xl font-bold text-primary mb-8">MnW Flashcards</h1>
       <nav className="space-y-4">
         <a href="/Dashboard" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
           <HomeIcon size={20} />
@@ -21,17 +20,10 @@ const Sidebar = () => {
           <span>My Decks</span>
         </a>
 
-        {/* <a href="#" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
-        <PlusIcon size={20} />
-        <span>Create Deck</span>
-        </a>  */}
         
         <CreateDeckDialog/>
-
-        <a href="#" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
-          <ChartBarIcon size={20} />
-          <span>Statistics</span>
-        </a>
+        <GenerateDeckDialog/>
+        
         <a href="#" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
           <CogIcon size={20} />
           <span>Settings</span>
