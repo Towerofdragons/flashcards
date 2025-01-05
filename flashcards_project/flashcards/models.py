@@ -9,7 +9,7 @@ class BaseModel(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
-    def delete(self):
+    def tempdelete(self):
         self.is_deleted = True
 
     class Meta:

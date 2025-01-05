@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,8 +9,10 @@ from .models import Flashcard, Deck
 from .serializers import (FlashcardCreateSerializer, FlashcardModifySerializer, FlashcardDeleteSerializer,
                           DeckCreateSerializer, DeckModifySerializer, DeckDeleteSerializer,
                         DeckSerializer, FlashcardSerializer)
-from django.views import View
 
+import json
+from openai import OpenAI
+from decouple import config
 
 from rest_framework.permissions import AllowAny
 
@@ -22,7 +23,7 @@ from rest_framework.permissions import AllowAny
 # Add to Deck
 # Remove from Deck
 
-class deck():
+class deckAccess():
     def load_deck(self, id):
         """
         Retrieve specific deck
@@ -52,7 +53,7 @@ class deck():
 
     def delete_deck(self, id):
         deck_item = Deck.objects.get(id=id, is_deleted=False)
-        deck_item.Delete()
+        deck_item.tempdelete()
         deck_item.save()
 
 
@@ -65,7 +66,7 @@ class deck():
         return self.list_flashcards.count()
 
 
-class get_decks(APIView, deck):
+class get_decks(APIView, deckAccess):
     """
     Get all decks
     """
@@ -99,8 +100,6 @@ class add_deck(APIView):
     def post(self, request):        
 
         try:
-            data = request.data.copy()
-            #data["user_id"] =  # User data
             serializer = self.Serializer(data=request.data)
             if serializer.is_valid():
                 print(serializer.validated_data)
@@ -138,12 +137,6 @@ class edit_deck(APIView):
         description = serializer.data["description"]
         id = serializer.data["id"]
 
-        # deck = Deck.objects.get(id=id, is_deleted=False)
-
-        # deck.name = term
-        # deck.description = description
-
-        # deck.save()
         try:
             deck = self.edit_Deck(id, term, description)
         except Deck.DoesNotExist:
@@ -155,7 +148,7 @@ class edit_deck(APIView):
         return Response(deck.name, status=status.HTTP_200_OK)
         
 
-class delete_deck(APIView, deck):
+class delete_deck(APIView, deckAccess):
     """
     Delete Deck
     """
@@ -177,20 +170,20 @@ class delete_deck(APIView, deck):
         try:
             # Check that the deck exists
             #deck = Deck.objects.get(id=id, is_deleted=False)
-            self.delete_deck()
+            self.delete_deck(serializer.data['id'])
+
+            return Response(
+                {"error": "Card has been deleted."},
+                status=status.HTTP_200_OK
+            )
         except Deck.DoesNotExist:
             return Response(
                 {"error": "Card not found or has been deleted."},
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # deck.delete()
-        # deck.save()
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class get_deck(APIView, deck):
+class get_deck(APIView, deckAccess):
     """
     Get specific deck and its contents
     """
@@ -356,12 +349,132 @@ class delete_flashcard(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        card.delete()
+        card.tempdelete()
         card.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Edit Flash Card
-# Shuffle card(randomize selection)
-#Create Deck
+
+class generate_deck(APIView):
+    """
+    Generate a deck and its associated flashcards from the AI response.
+    """
+    permission_classes = [AllowAny]
+    
+    def __init__(self):
+        self.deck_serializer = DeckCreateSerializer
+        self.flashcard_serializer = FlashcardCreateSerializer
+    
+    def post(self, request):
+        """
+        Create a deck and auto-generate flashcards using AI.
+        """
+        try:
+            name = request.data.get('name',"Default")
+            description = request.data.get('description', 'No Description')
+            prompt = request.data.get('prompt', 'How to Study')
+            
+            deck_data = {
+                "name" : name,
+                "description" : description
+            }
+            print(deck_data)
+
+
+
+
+            deck_serializer = self.deck_serializer(data=deck_data)
+
+            print("serializing")
+            if not deck_serializer.is_valid():
+                return Response(
+                    {"error": "Deck creation failed", "details": deck_serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+            deck = deck_serializer.save()
+            print("saved")
+
+            response = query_openrouter(prompt, max_retries=5)
+            
+            flashcards_data = response
+
+            print(flashcards_data)
+
+            # Use flashcard data to create new flashcards for specified deck
+            flashcard_responses = []
+            for flashcard_data in flashcards_data:
+                flashcard_data['deck'] = deck.id
+                flashcard_serializer = self.flashcard_serializer(data=flashcard_data)
+
+                if flashcard_serializer.is_valid():
+                    flashcard = flashcard_serializer.save()
+                    flashcard_responses.append(flashcard_serializer.data)
+
+                    print("Flashcard Saved")
+                else:
+                    return Response(
+                        {"error": "Flashcard creation failed", "details": flashcard_serializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            return Response(
+                {
+                    "deck": deck_serializer.data,
+                    "flashcards": flashcard_responses,
+                },
+                status=status.HTTP_201_CREATED
+            )
+
+        except Exception as e:
+            print(e)
+            deck.delete()
+            return Response(
+                {"error": "An error occurred", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+
+def query_openrouter(prompt, max_retries=5):
+    """
+    Querrying OpenRouter with Prompt from user
+    """
+
+    client = OpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key= config('API_KEY'),
+                )
+
+
+    content =  f"""Generate 10 flashcards on the topic '{prompt}' in valid JSON format with term, and definition fields.
+            Do not include any comments, explanations, or extraneous characters in the response."""
+    
+
+
+    for attempt in range(max_retries):
+        try:
+            completion = client.chat.completions.create(
+
+                model="openai/gpt-3.5-turbo-1106",
+                messages=[
+                    {
+                    "role": "user",
+                    "content": content
+                    }
+                ]
+            )
+
+            # Parse the JSON response
+
+            try:
+                parsed = json.loads(completion.choices[0].message.content)
+                return parsed
+            except json.JSONDecodeError:
+                print("The response is not valid JSON.")
+                return None
+            
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
