@@ -131,17 +131,7 @@ Install the necessary Node.js dependencies:
 npm install
 ```
 
-#### 3. **Set Up Environment Variables**
-
-Create a `.env` file in the root of the `frontend` folder with the following variables:
-
-```bash
-VITE_BACKEND_URL=http://127.0.0.1:8000
-```
-
-This specifies the base URL of the backend (Django) that the frontend will make requests to.
-
-#### 4. **Run Vite Development Server**
+#### 3. **Run Vite Development Server**
 
 Start the Vite development server:
 
@@ -149,7 +139,7 @@ Start the Vite development server:
 npm run dev
 ```
 
-This will run the React app on `http://localhost:3000`.
+This will run the React app on `http://localhost:5173`.
 
 ---
 
@@ -178,6 +168,4 @@ Make sure to run both servers (Django backend and React frontend) simultaneously
 
 ### Testing the Application
 
-- Once both servers are running, navigate to `http://localhost:3000` in your browser to interact with the React frontend.
-- The frontend will make API calls to the Django backend, which in turn will integrate with OpenRouter for AI-powered flashcard features.
-
+- Once both servers are running, navigate to `http://localhost:5173` (or as described in the console by vite after starting the servrer) in your browser to interact with the React frontend.
