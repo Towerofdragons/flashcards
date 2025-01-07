@@ -142,7 +142,8 @@ export const GenerateDeckDialog = () => {
           name: title,
           prompt: prompt,
           description: description
-        }
+        },
+        { timeout: 15000 }
       );
 
       showToast({

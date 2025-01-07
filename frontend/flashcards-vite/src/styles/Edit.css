@@ -55,8 +55,9 @@
 
   .delete-card-btn {
     display: block;
-    width: 70%;
-    padding: 0.25rem;
+    width: 100%;
+    max-width: 100px;
+    padding: 0.2rem;
     background-color: #f6826b;
     color: white;
     border: none;

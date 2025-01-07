@@ -14,7 +14,7 @@ const DeckCard = ({ id, title, description= "No description", cardCount, lastStu
         <button type="button" 
                     onClick={() => deleteCard(id)}
                     className="delete-card-btn"
-                    >x</button>
+                    ><Trash2/></button>
         </div>
       </div>
       <p className="text-xl font-semibold text-text mb-2">{description}</p>

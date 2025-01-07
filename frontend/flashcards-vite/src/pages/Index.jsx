@@ -11,9 +11,22 @@ import { CreditCard, IdCardIcon, WalletCards } from 'lucide-react';
 const Index = () => {
 
   const [decks, setDecks] = useState([]);
+  const [lastStudied, setLastStudied] = useState([]);
   const [error, setError] = useState(null);
   const { showToast } = useToast();
 
+
+  const lastStudiedDecks = () => {
+    // Filter decks that have a valid lastStudied date - Display up to 3
+    if (decks && decks.length > 0) {
+      const studiedDecks = decks
+        .sort((a, b) =>  b.lastStudied - a.lastStudied)
+        .slice(0, 3);
+
+      setLastStudied(studiedDecks);
+      
+    }
+  };
 
   const deleteCard = async(id) => {
     try {
@@ -63,7 +76,9 @@ const Index = () => {
 
   useEffect(() => {
 
-    getDecks(); // Calls get deck to get all decks when component loads - runs once
+    getDecks();
+    lastStudiedDecks(); // Calls get deck to get all decks when component loads - runs once
+    console.log(decks);
   },[]); 
 
 
@@ -79,17 +94,43 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             <ContentBox
-            title= {decks.length}
-            >
-              <CreditCard size={40} strokeWidth={1.5} />
+            title= "Current Decks"
+            > 
+              <WalletCards size={40} strokeWidth={1.5} />
+               <b>{decks.length}</b>
             </ContentBox>
 
             <ContentBox
-            title= "Today's Motivation ✨"
+            title= "Total Cards"
             >
-              <WalletCards size={40} strokeWidth={1.5} />
-              <p>You don't want a repeat of last semester!</p>
+              <CreditCard size={40} strokeWidth={1.5} />
+              <b>100</b>
             </ContentBox>
+        </div>
+
+
+        <div>
+            <ContentBox
+            title= "Recent Study Sessions"
+            >
+              <div>
+              {lastStudied.length > 0 ? (
+                  <ul>
+                    {lastStudied.map(deck => (
+                      <li key={deck.id} className="deck-item">
+                        <span className="deck-name">{deck.name} </span>
+                        <span className="deck-date">
+                          {Date(deck.lastStudied).toLocaleDateString()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No sessions yet</p>
+                )}
+              </div>
+            </ContentBox>
+
         </div>
 
         <div>
