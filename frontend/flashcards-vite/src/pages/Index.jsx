@@ -11,10 +11,19 @@ import { CreditCard, IdCardIcon, WalletCards } from 'lucide-react';
 const Index = () => {
 
   const [decks, setDecks] = useState([]);
+  const [totalCards, setTotalCards] = useState(0);
   const [lastStudied, setLastStudied] = useState([]);
   const [error, setError] = useState(null);
   const { showToast } = useToast();
 
+
+  const calculateTotalCards = () => {
+    if (decks && decks.length > 0) {
+      const total = decks.reduce((sum, deck) => sum + deck.cardCount, 0); // Apply callback for each deck to gather all deck sizes
+      console.log(`total cards:${total}`);
+      setTotalCards(total);
+    }
+  };
 
   const lastStudiedDecks = () => {
     // Filter decks that have a valid lastStudied date - Display up to 3
@@ -62,6 +71,7 @@ const Index = () => {
       const response = await api.get("/get-decks/");
       console.log(response.data);
       setDecks(response.data);
+      console.log(decks);
     } catch (error) {
       showToast(
         {
@@ -77,14 +87,19 @@ const Index = () => {
   useEffect(() => {
 
     getDecks();
-    lastStudiedDecks(); // Calls get deck to get all decks when component loads - runs once
     console.log(decks);
   },[]); 
+
+  useEffect(() => {
+    calculateTotalCards();
+    lastStudiedDecks();
+    console.log(decks);
+  },[decks]); 
 
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar />
+      <Sidebar getDecks={ getDecks } />
       <main className="ml-64 flex-1 p-8 ">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-text">Welcome back!</h2>
@@ -104,7 +119,7 @@ const Index = () => {
             title= "Total Cards"
             >
               <CreditCard size={40} strokeWidth={1.5} />
-              <b>100</b>
+              <b>{totalCards}</b>
             </ContentBox>
         </div>
 
@@ -120,7 +135,7 @@ const Index = () => {
                       <li key={deck.id} className="deck-item">
                         <span className="deck-name">{deck.name} </span>
                         <span className="deck-date">
-                          {Date(deck.lastStudied).toLocaleDateString()}
+                          {Date(deck.lastStudied).toLocaleString()}
                         </span>
                       </li>
                     ))}

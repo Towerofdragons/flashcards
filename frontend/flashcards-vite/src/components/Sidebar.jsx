@@ -6,7 +6,7 @@ import { CreateDeckDialog, GenerateDeckDialog } from './CreateDeck';
 import { useState } from 'react';
 
 
-const Sidebar = () => {
+const Sidebar = ({ getDecks }) => {
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-gray-200 shadow-lg p-6">
       <h1 className="text-2xl font-bold text-primary mb-8">MnW Flashcards</h1>
@@ -21,8 +21,8 @@ const Sidebar = () => {
         </a>
 
         
-        <CreateDeckDialog/>
-        <GenerateDeckDialog/>
+        <CreateDeckDialog getDecks={getDecks}/>
+        <GenerateDeckDialog getDecks={getDecks}/>
         
         <a href="#" className="flex items-center space-x-3 text-text hover:text-primary p-2 rounded-lg hover:bg-background">
           <CogIcon size={20} />

@@ -20,7 +20,7 @@ const sidebarStyles = {
 
 
 
-export const CreateDeckDialog = () => {
+export const CreateDeckDialog = ({ getDecks }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const { showToast } = useToast();
@@ -45,6 +45,7 @@ export const CreateDeckDialog = () => {
         }
       );
 
+      getDecks();
       showToast({
         title: "Success",
         description: "Deck created successfully!",
@@ -118,7 +119,7 @@ export const CreateDeckDialog = () => {
 };
 
 
-export const GenerateDeckDialog = () => {
+export const GenerateDeckDialog = ({ getDecks }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -146,6 +147,7 @@ export const GenerateDeckDialog = () => {
         { timeout: 15000 }
       );
 
+      getDecks();
       showToast({
         title: "Success",
         description: "Deck Generated successfully!",
