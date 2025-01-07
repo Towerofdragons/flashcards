@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('api/flashcards/', views.get_flashcard.as_view(), name='get_flashcard'),
-    path('api/add-flashcard/<uuid:deck_id>/', views.create_flashcard.as_view(), name='add_flashcard'),
+    path('api/add-flashcard/', views.create_flashcard.as_view(), name='add_flashcard'),
     path('api/delete-flashcard/', views.delete_flashcard.as_view(), name='delete_flashcard'),
     path('api/edit-flashcard/', views.edit_flashcard.as_view(), name='edit_flashcard'),
 

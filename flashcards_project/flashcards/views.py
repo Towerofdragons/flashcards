@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils.timezone import now
+from django.db import transaction
+from django.db.models import Count
 
 from .models import Flashcard, Deck
 # users.models
@@ -37,7 +39,7 @@ class deckAccess():
         """
         List all Undeleted Decks
         """
-        decks =  Deck.objects.filter(is_deleted=False)
+        decks =  Deck.objects.filter(is_deleted=False).annotate(cardCount=Count('flashcards'))
         return decks
 
     def edit_deck(self, id, name, description):
@@ -118,6 +120,8 @@ class add_deck(APIView):
 class edit_deck(APIView):
     """
     Edit a deck
+    Update deck ifo
+    Batch Process updates deletions and creations for flashcards
     """
     def __init__(self):
         self.Serializer = DeckModifySerializer
@@ -146,6 +150,7 @@ class edit_deck(APIView):
             )
 
         return Response(deck.name, status=status.HTTP_200_OK)
+    
         
 
 class delete_deck(APIView, deckAccess):
@@ -264,26 +269,24 @@ class create_flashcard(APIView):
     def __init__(self):
         self.Serializer = FlashcardCreateSerializer
     permission_classes = [AllowAny]    
-    def post(self, request,deck_id):
+    def post(self, request):
 
-        try:
-            # Check that the deck exists
-            deck = Deck.objects.get(id=deck_id, is_deleted=False)
-        except Deck.DoesNotExist:
-            return Response(
-                {"error": "Deck not found or has been deleted."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        data = request.data.copy()
-        data['deck_id'] = deck.id
-        print(data)
-        serializer = self.Serializer(data=data)
-        
+        serializer = self.Serializer(data=request.data)
 
         if serializer.is_valid():
             print(serializer.validated_data)
-            serializer.save()
+            deck_id = serializer.validated_data["deck"].id
+
+            try:
+                # Check that the deck exists
+                deck = Deck.objects.get(id=deck_id, is_deleted=False)
+                serializer.save()
+            except Deck.DoesNotExist:
+                return Response(
+                    {"error": "Deck not found or has been deleted."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -339,7 +342,7 @@ class delete_flashcard(APIView):
 
         print(serializer.data)
 
-        id = serializer.data["id"]
+        id = serializer.validated_data["id"]
         try:
             # Check that the deck exists
             card = Flashcard.objects.get(id=id, is_deleted=False)
@@ -446,9 +449,12 @@ def query_openrouter(prompt, max_retries=5):
                     base_url="https://openrouter.ai/api/v1",
                     api_key= config('API_KEY'),
                 )
+    
+    
 
 
-    content =  f"""Generate 10 flashcards on the topic '{prompt}' in valid JSON format with term, and definition fields.
+    content =  f"""Generate 10 flashcards on the prompt: '{prompt}' 
+            Lay it out in valid JSON format with term, and definition fields only.
             Do not include any comments, explanations, or extraneous characters in the response."""
     
 
@@ -473,8 +479,12 @@ def query_openrouter(prompt, max_retries=5):
                 return parsed
             except json.JSONDecodeError:
                 print("The response is not valid JSON.")
-                return None
+                continue
             
         except Exception as e:
             print(f"Error: {e}")
             return None
+        
+    return None
+
+

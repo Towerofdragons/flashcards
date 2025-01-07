@@ -17,6 +17,7 @@ class FlashcardModifySerializer(serializers.ModelSerializer):
 
 class DeckSerializer(serializers.ModelSerializer):
     # deck_id = serializers.UUIDField(source='id', required=True)
+    cardCount = serializers.IntegerField(required=False, allow_null=True)
     class Meta:
         model = Deck
         fields = "__all__"
@@ -48,4 +49,4 @@ class FlashcardCreateSerializer(serializers.ModelSerializer):
     #deck = serializers.UUIDField(source='id', required=True)
     class Meta:
         model = Flashcard
-        fields = ["deck", 'term','definition']
+        fields = ["id","deck", 'term','definition']
